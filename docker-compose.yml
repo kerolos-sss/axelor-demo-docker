@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+    axelor:
+      build: ./open-platform-demo
+      # image: axelor/aio-erp
+      volumes:
+        - postgresData:/var/lib/postgresql
+        - postgresLogs:/var/log/postgresql
+        
+      expose:
+        - 80/tcp
+        - 443/tcp
+#      links:
+#        - postgresql:pgsql
+      ports:
+        - 0.0.0.0:18000:80/tcp
+        - 0.0.0.0:18443:443/tcp
+      restart: unless-stopped
+volumes:
+    postgresData:
+    postgresLogs:
+    
+##https://github.com/axelor/axelor-docker/tree/master/aio-erp
+
+#/var/lib/tomcat - tomcat base directory
+#/var/lib/postgresql - postgresql data directory
+#/var/log/tomcat - tomcat log files
+#/var/log/postgresql - postgresql log files
