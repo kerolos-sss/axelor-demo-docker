@@ -1,0 +1,3 @@
+[submodule "axelor-docker"]
+	path = axelor-docker
+	url = ../axelor-docker.git
