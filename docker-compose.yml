@@ -1,23 +1,88 @@
 version: "3"
 
 services:
-    axelor:
-      build: ./open-platform-demo
-      # image: axelor/aio-erp
-      volumes:
-        - postgresData:/var/lib/postgresql
-        - postgresLogs:/var/log/postgresql
-        
-      expose:
-        - 80/tcp
-        - 443/tcp
+
+  pg:
+    # container_name: postgres_container
+    image: postgres
+    environment:
+      POSTGRES_USER: ${DB_USER_NAME:?DB_USER_NAME env variable not found}
+      POSTGRES_PASSWORD: ${DB_USER_PASSWORD:? DB_USER_PASSWORD env var not set}
+      # POSTGRES_DB: ${DB_NAME:? DB_NAME env variable not found}
+      PGDATA: /data/postgres
+    volumes:
+        - postgresData:/data/postgres
+    ports:
+      ## no need to map the port
+      - "15432:5432"
+    # networks:
+    #   - postgres
+    restart: unless-stopped
+  
+  pgadmin:
+    # container_name: pgadmin_container
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}\
+    volumes:
+      - pgadmin:/root/.pgadmin
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    # networks:
+    #   - postgres
+    restart: unless-stopped
+
+  axelor:
+    build: ./open-platform-demo
+    # image: axelor/aio-erp
+    # volumes:
+    #   - postgresData:/var/lib/postgresql
+    #   - postgresLogs:/var/log/postgresql
+      
+    expose:
+      - 80/tcp
+      - 443/tcp
 #      links:
 #        - postgresql:pgsql
-      ports:
-        - 0.0.0.0:18000:80/tcp
-        - 0.0.0.0:18443:443/tcp
-      restart: unless-stopped
+    ports:
+      - 0.0.0.0:18000:80/tcp
+      - 0.0.0.0:18443:443/tcp
+    restart: unless-stopped
+    links:
+      - ${DB_HOST_NAME}:pg
+    environment:
+      - ENV_DD_DRIVER
+      - ENV_DDL
+      - ENV_DD_URL
+      - ENV_DD_USER_NAME
+      - ENV_DD_USER_PASSWORD
+    # entrypoint:
+    #   ""
+    # command : bash -c "env && tail -f /var/lib/tomcat/conf/web.xml"
+    # command: bash -c "
+    #   sed -e 's|jdbc:postgresql://localhost:5432/open-platform-demo-dev|jdbc:postgresql://${DB_HOST_NAME}:5432/{DB_NAME:? DB_NAME env variable not found}|g' -i /var/lib/tomcat/application.properties && 
+    #   sed -e 's|^db\.default\.user = axelor|db.default.user = ${DB_USER_NAME:? DB_USER_NAME env variable not found}|g' -i /var/lib/tomcat/application.properties && 
+    #   sed -e 's|^db\.default\.password =|db.default.password = ${DB_USER_PASSWORD:? DB_USER_PASSWORD env variable not found}|g' -i /var/lib/tomcat/application.properties && 
+    #   cat /var/lib/tomcat/application.properties &&
+    #   docker-entrypoint.sh start" 
+      
+
+        #db.default.user = axelor
+#db.default.password =
+
+
+# networks:
+#   postgres:
+#     driver: bridge
+
+# volumes:
+#     postgres:
+#     pgadmin:        
+
+    
 volumes:
+    pgadmin:
     postgresData:
     postgresLogs:
     
