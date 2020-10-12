@@ -14,7 +14,7 @@ services:
         - postgresData:/data/postgres
     ports:
       ## no need to map the port
-      - "15432:5432"
+      - "1${DB_PORT}:${DB_PORT}"
     # networks:
     #   - postgres
     restart: unless-stopped
@@ -24,7 +24,7 @@ services:
     image: dpage/pgadmin4
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}\
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
     volumes:
       - pgadmin:/root/.pgadmin
     ports:
@@ -34,9 +34,11 @@ services:
     restart: unless-stopped
 
   axelor:
-    build: ./open-platform-demo
+    build: 
+      context: ./open-platform-demo
     # image: axelor/aio-erp
-    # volumes:
+    volumes:
+      - uploads:/etc/uploads
     #   - postgresData:/var/lib/postgresql
     #   - postgresLogs:/var/log/postgresql
       
@@ -52,12 +54,14 @@ services:
     links:
       - ${DB_HOST_NAME}:pg
     environment:
-      - ENV_DD_DRIVER
-      - ENV_DDL
-      - ENV_DD_URL
-      - ENV_DD_USER_NAME
-      - ENV_DD_USER_PASSWORD
-    # entrypoint:
+      - AXELOR_UPLOAD_DIR=/etc/uploads
+      - POSTGRES_HOST=${DB_HOST_NAME:? DB_HOST_NAME env var not set}
+      - POSTGRES_PORT=${DB_PORT:? DB_PORT env var not set}
+      - POSTGRES_DB=${DB_USER_NAME:? DB_USER_NAME env var not set}
+      - POSTGRES_USER=${DB_USER_NAME:? DB_USER_NAME env var not set}
+      - POSTGRES_PASSWORD=${DB_USER_PASSWORD:? DB_USER_PASSWORD env var not set}
+
+      # entrypoint:
     #   ""
     # command : bash -c "env && tail -f /var/lib/tomcat/conf/web.xml"
     # command: bash -c "
@@ -82,6 +86,7 @@ services:
 
     
 volumes:
+    uploads:
     pgadmin:
     postgresData:
     postgresLogs:
